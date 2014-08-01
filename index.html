@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>strikeout scatter</title>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <style type="text/css">
+            body {
+                text-align: center;
+            }
+
+            .axis text,
+            .grid text {
+                font-family: sans-serif;
+                font-size: 13px;
+            }
+
+            .grid text {
+                fill: #aaa;
+            }
+
+            .x.axis text {
+                transform: translate(16px);
+            }
+
+            .y.axis path,
+            .y.axis line {
+                display: none;
+            }
+
+            .axis path,
+            .axis line {
+                stroke: black;
+                fill: none;
+                shape-renderings: crispEdges;
+            }
+
+            .grid line {
+                    stroke: lightgrey;
+                    stroke-dasharray: 2.5, 5;
+                    opacity: 0.8;
+            }
+
+            .grid path {
+                stroke-width: 0;
+            }
+
+            circle {
+                fill: #ddd
+            }
+                
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript">
+            var margin = {top: 20, right: 60, bottom: 20, left: 60};
+            var w = 1200 - margin.left - margin.right;
+            var h = 660 - margin.top - margin.bottom;
+            var yearFormat = d3.format("04d");
+
+            d3.csv("strikeouts.csv", function(error, data) {
+                    data.forEach(function(d) {
+                        d.year = +d.year,
+                        d.so = +d.so,
+                        d.g = +d.g,
+                        d.spg = +d.so / +d.g;
+                    });
+
+                    var svg = d3.select("body")
+                                .append("svg")
+                                .attr({
+                                    width: w + margin.left + margin.right,
+                                    height: h + margin.top + margin.bottom
+                                })
+                                .append("g")
+                                .attr("transform", "translate(" + margin.left + ", " + margin.top+ ")");
+
+                    var xScale = d3.scale.linear()
+                                    .domain([1900, 2013.5])
+                                    .range([0, w - 60]);
+                    
+                    var yScale = d3.scale.linear()
+                                    .domain([0, d3.max(data, function(d) { return d.spg; })])
+                                    .range([h, 0]);
+
+                    var circles = svg.selectAll("circle")
+                                    .data(data)
+                                    .enter()
+                                    .append("circle")
+                                    .attr({
+                                        cx: function(d, i) { return xScale(d.year); }, 
+                                        cy: function(d) { return yScale(d.spg); },
+                                        r: 3,
+                                    });
+
+                    var xAxis = d3.svg.axis()
+                                    .scale(xScale)
+                                    .outerTickSize(0)
+                                    .tickFormat(yearFormat)
+                                    .orient("bottom");
+
+                    var yAxis = d3.svg.axis()
+                                    .scale(yScale)
+                                    .tickSize(0)
+                                    .orient("right");
+
+                    var yAxisGrid = yAxis.tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                                    .tickSize(w - 60, 0);
+
+                    svg.append("g")
+                        .attr("class", "grid")
+                        .call(yAxisGrid);
+
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0" + ", " + h + ")")
+                        .call(xAxis);
+
+            });
+
+        </script>
+    </body>
+</html>
