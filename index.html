@@ -9,6 +9,13 @@
                 text-align: center;
             }
 
+            .avgDots {
+                fill: blue;
+                opacity: 0.7;
+                stroke: lightgrey;
+
+            }
+
             .axis text,
             .grid text {
                 font-family: sans-serif;
@@ -17,6 +24,7 @@
 
             .grid text {
                 fill: #aaa;
+                transform: translate(10px);
             }
 
             .x.axis text {
@@ -36,27 +44,40 @@
             }
 
             .grid line {
-                    stroke: lightgrey;
-                    stroke-dasharray: 2.5, 5;
-                    opacity: 0.8;
+                stroke: #ccc;
+                stroke-dasharray: 2.5, 5;
             }
 
             .grid path {
                 stroke-width: 0;
             }
 
-            circle {
-                fill: #ddd
+            .line {
+                fill: none;
+                stroke: blue;
             }
-                
+
+            .bgDots {
+                fill: #E0E0E0;
+            }
+
         </style>
     </head>
     <body>
         <script type="text/javascript">
             var margin = {top: 20, right: 60, bottom: 20, left: 60};
             var w = 1200 - margin.left - margin.right;
-            var h = 660 - margin.top - margin.bottom;
+            var h = 600 - margin.top - margin.bottom;
             var yearFormat = d3.format("04d");
+
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr({
+                            width: w + margin.left + margin.right,
+                            height: h + margin.top + margin.bottom,
+                        })
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
             d3.csv("strikeouts.csv", function(error, data) {
                     data.forEach(function(d) {
@@ -65,33 +86,26 @@
                         d.g = +d.g,
                         d.spg = +d.so / +d.g;
                     });
-
-                    var svg = d3.select("body")
-                                .append("svg")
-                                .attr({
-                                    width: w + margin.left + margin.right,
-                                    height: h + margin.top + margin.bottom
-                                })
-                                .append("g")
-                                .attr("transform", "translate(" + margin.left + ", " + margin.top+ ")");
+                    console.log(data)
 
                     var xScale = d3.scale.linear()
                                     .domain([1900, 2013.5])
                                     .range([0, w - 60]);
-                    
+
                     var yScale = d3.scale.linear()
                                     .domain([0, d3.max(data, function(d) { return d.spg; })])
                                     .range([h, 0]);
 
-                    var circles = svg.selectAll("circle")
+                    var circles = svg.selectAll(".bgDots")
                                     .data(data)
                                     .enter()
                                     .append("circle")
                                     .attr({
-                                        cx: function(d, i) { return xScale(d.year); }, 
+                                        cx: function(d, i) { return xScale(d.year); },
                                         cy: function(d) { return yScale(d.spg); },
                                         r: 3,
-                                    });
+                                    })
+                                    .attr("class", "bgDots");
 
                     var xAxis = d3.svg.axis()
                                     .scale(xScale)
@@ -102,19 +116,46 @@
                     var yAxis = d3.svg.axis()
                                     .scale(yScale)
                                     .tickSize(0)
-                                    .orient("right");
-
-                    var yAxisGrid = yAxis.tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                                    .orient("right")
                                     .tickSize(w - 60, 0);
 
                     svg.append("g")
                         .attr("class", "grid")
-                        .call(yAxisGrid);
+                        .call(yAxis);
 
                     svg.append("g")
                         .attr("class", "x axis")
                         .attr("transform", "translate(0" + ", " + h + ")")
                         .call(xAxis);
+
+                    /* Produces an array with objects with the properties key and value (mean of all the spgs in a particular yr)*/
+                    var avgs = d3.nest()
+                                .key(function(d) { return d.year; })
+                                .rollup(function(d) {
+                                        return d3.mean(d, function(g) { return g.spg; });
+                                })
+                                .entries(data);
+                                console.log(avgs)
+
+                    /* Uses data from avgs to compute x, y */
+                    var line = d3.svg.line()
+                                .x(function(avgs) { return xScale(+avgs.key); })
+                                .y(function(avgs) { return yScale(avgs.values); });
+
+                    var avgLine = svg.append("path")
+                                    .attr("class", "line")
+                                    .attr("d", line(avgs));
+
+                    /* Creates the background circles based on data from avgs */
+                    var avgCircles = svg.selectAll(".avgDots")
+                                    .data(avgs)
+                                    .enter()
+                                    .append("circle")
+                                    .attr("cy", function(d, i) { return yScale(avgs[i].values); })
+                                    .attr("cx", function(d, i) { return xScale(+avgs[i].key); })
+                                    .attr("r", 4)
+                                    .attr("class", "avgDots");
+
 
             });
 
