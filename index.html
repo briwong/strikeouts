@@ -102,7 +102,7 @@
                             height: h + margin.top + margin.bottom,
                         })
                         .append("g")
-                        .attr("transform", "translate(" + margin.left + ", " +                              margin.top + ")");
+                        .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
             d3.csv("strikeouts.csv", function(error, data) {
                     data.forEach(function(d) {
@@ -199,7 +199,6 @@
                                         .data(uniqueFranchises)
                                         .enter()
                                         .append("option")
-                                        // function(d) corresponds to the value inputted in .data(___)
                                         .attr("value", function(d) {return d.key;})
                                         .text(function(d) {
                                             return d.key;
