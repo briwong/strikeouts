@@ -5,6 +5,11 @@
         <title>strikeout scatter</title>
         <script src="http://d3js.org/d3.v3.min.js"></script>
         <style type="text/css">
+
+            h1 p {
+                font-family: sans-serif;
+            }
+
             body {
                 text-align: center;
             }
@@ -87,9 +92,12 @@
                 stroke-width: 0.75;
             }
 
+
         </style>
     </head>
     <body>
+        <h1>Strikeouts on the Rise</h1>
+        <p>There were more strikeouts in 2012 than at any other time in major league history.</p>
         <script type="text/javascript">
             var margin = {top: 20, right: 60, bottom: 20, left: 60};
             var w = 1200 - margin.left - margin.right;
@@ -157,30 +165,30 @@
 
                     /* Produces an array with objects with key (yr) and value (average team spgs per yr) properties */
                     var avgs = d3.nest()
-                                .key(function(d) { return d.year; })
-                                .rollup(function(d) {
-                                        return d3.mean(d, function(g) { return g.spg; });
-                                })
-                                .entries(data);
+                                    .key(function(d) { return d.year; })
+                                    .rollup(function(d) {
+                                            return d3.mean(d, function(g) { return g.spg; });
+                                    })
+                                    .entries(data);
 
                     /* Uses data from avgs to compute x, y */
                     var line = d3.svg.line()
-                                .x(function(avgs) { return xScale(+avgs.key); })
-                                .y(function(avgs) { return yScale(avgs.values); });
+                                    .x(function(avgs) { return xScale(+avgs.key); })
+                                    .y(function(avgs) { return yScale(avgs.values); });
 
                     var avgLine = svg.append("path")
-                                    .attr("class", "line")
-                                    .attr("d", line(avgs));
+                                        .attr("class", "line")
+                                        .attr("d", line(avgs));
 
-                    /* Creates the background circles based on data from avgs */
+                    /* Creates the average line circles based on data from avgs */
                     var avgCircles = svg.selectAll(".avgDots")
-                                    .data(avgs)
-                                    .enter()
-                                    .append("circle")
-                                    .attr("cy", function(d, i) { return yScale(avgs[i].values); })
-                                    .attr("cx", function(d, i) { return xScale(+avgs[i].key); })
-                                    .attr("r", 3.5)
-                                    .attr("class", "allDots avgDots");
+                                        .data(avgs)
+                                        .enter()
+                                        .append("circle")
+                                        .attr("cy", function(d, i) { return yScale(avgs[i].values); })
+                                        .attr("cx", function(d, i) { return xScale(+avgs[i].key); })
+                                        .attr("r", 3.5)
+                                        .attr("class", "allDots avgDots");
 
                     /* Returns the unique franchises as keys with respective frequencies as values */
                     var uniqueFranchises = d3.nest()
@@ -229,33 +237,64 @@
                                         .attr("cy", function(d) { return yScale(d.spg);});
 
                         var tLine = d3.svg.line()
-                                .x(function(d) { return xScale(d.year); })
-                                .y(function(d) { return yScale(d.spg); })
+                                        .x(function(d) { return xScale(d.year); })
+                                        .y(function(d) { return yScale(d.spg); })
 
                         var teamLine = svg.append("path")
-                                    .attr("class", "teamLine")
-                                    .attr("d", tLine(teamData))
+                                        .attr("class", "teamLine")
+                                        .attr("d", tLine(teamData))
                     }
 
                     /* Adding interactivity */
                     d3.selectAll(".allDots")
-                        .on("mouseover", mouseover)
+                        .on("mousemove", mousemove)
                         .on("mouseout", mouseout)
 
-                    function mouseover() {
+                    function mousemove() {
                         var xcoord = d3.select(this).attr("cx")
                         var ycoord = d3.select(this).attr("cy")
+                        console.log(d3.select(this))
+
                         svg.append("circle")
                             .attr("cx", xcoord)
                             .attr("cy", ycoord)
                             .attr("r", 5)
                             .attr("class", "focus");
+
                     }
 
                     function mouseout() {
                         d3.selectAll(".focus")
                             .remove()
                     }
+
+                    // Trying out MikeBostock's X-Value Mouseover
+                    /* var bisectDate = d3.bisector(function(d) { return d.year; }).left;
+
+                    var focus = svg.append("g")
+                                    .class("tooltip")
+                                    .style("display", "none");
+
+                    focus.append("circle")
+                        .attr("r", 4);
+
+                    svg.append("rect")
+                        .attr("width", w)
+                        .attr("height", h)
+                        .style("fill", "none")
+                        .style("pointer-events", "all")
+                        .on("mouseover", function() { focus.style("display", null); })
+                        .on("mouseout", function() { focus.style("display", "none"); })
+                        .on("mousemove", mousemove);
+
+                     var x0 = x.invert(d3.mouse(this)[0]),
+                          i = bisectDate(data, x0, 1),
+                          d0 = data[i - 1],
+                          d1 = data[i],
+                          d = x0 - d0.date > d1.date - x0 ? d1 : d0; */
+
+
+
 
             });
 
