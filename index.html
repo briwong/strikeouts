@@ -90,6 +90,9 @@
                 fill: none;
                 stroke: grey;
                 stroke-width: 0.75;
+                font-family: sans-serif;
+                font-size: 10px;
+                color: darkgrey;
             }
 
 
@@ -204,6 +207,7 @@
                                         .append("select")
                                         .attr("class", "dropdown")
                                         .on("change", change)
+
                     var options = selectFrom.selectAll("option")
                                         .data(uniqueFranchises)
                                         .enter()
@@ -218,7 +222,7 @@
                     /* Retrieves the team from dropdown selection. Passes result of selection into redraw(). Removes prior teamLine if it exists */
                     function change() {
                         var team = d3.select(".dropdown").node().value
-                        var teamData = data.filter(function(d) {
+                        teamData = data.filter(function(d) {
                                             return d.franchise === team;
                         })
                         svg.selectAll(".teamDots, .teamLine").remove()
@@ -245,57 +249,63 @@
                                         .attr("d", tLine(teamData))
 
 
-                    /* Adding interactivity */
-                    d3.selectAll(".allDots")
-                        .on("mousemove", mousemove)
-                        .on("mouseout", mouseout)
+                        /* Adding manual interactivity
+                        d3.selectAll(".allDots")
+                            .on("mousemove", mousemove)
+                            .on("mouseout", mouseout)
 
-                    function mousemove() {
-                        var xcoord = d3.select(this).attr("cx")
-                        var ycoord = d3.select(this).attr("cy")
-                        console.log(d3.select(this))
+                        function mousemove() {
+                            var xcoord = d3.select(this).attr("cx")
+                            var ycoord = d3.select(this).attr("cy")
+                            console.log(d3.select(this))
 
-                        svg.append("circle")
-                            .attr("cx", xcoord)
-                            .attr("cy", ycoord)
-                            .attr("r", 5)
-                            .attr("class", "focus");
+                            svg.append("circle")
+                                .attr("cx", xcoord)
+                                .attr("cy", ycoord)
+                                .attr("r", 5)
+                                .attr("class", "focus");
+
+                        }
+
+                        function mouseout() {
+                            d3.selectAll(".focus")
+                                .remove()
+                        }
+                    }*/
 
                     }
 
-                    function mouseout() {
-                        d3.selectAll(".focus")
-                            .remove()
-                    }
+                        // Trying out MikeBostock's X-Value Mouseover
+                        var bisectDate = d3.bisector(function(d) { return d.key; }).left;
 
-                    // Trying out MikeBostock's X-Value Mouseover
-                    /* var bisectDate = d3.bisector(function(d) { return d.year; }).left;
+                        var focus = svg.append("g")
+                                        .attr("class", "focus")
+                                        .style("display", "none");
 
-                    var focus = svg.append("g")
-                                    .class("tooltip")
-                                    .style("display", "none");
+                        var focusCircle = focus.append("circle")
+                                            .attr("r", 6);
 
-                    focus.append("circle")
-                        .attr("r", 4);
+                        focus.append("text");
 
-                    svg.append("rect")
-                        .attr("width", w)
-                        .attr("height", h)
-                        .style("fill", "none")
-                        .style("pointer-events", "all")
-                        .on("mouseover", function() { focus.style("display", null); })
-                        .on("mouseout", function() { focus.style("display", "none"); })
-                        .on("mousemove", mousemove);
+                        svg.append("rect")
+                            .attr("width", w)
+                            .attr("height", h)
+                            .style("fill", "none")
+                            .style("pointer-events", "all")
+                            .on("mouseover", function() { focus.style("display", null); })
+                            .on("mouseout", function() { focus.style("display", "none"); })
+                            .on("mousemove", mousemove);
 
-                     var x0 = x.invert(d3.mouse(this)[0]),
-                          i = bisectDate(data, x0, 1),
-                          d0 = data[i - 1],
-                          d1 = data[i],
-                          d = x0 - d0.date > d1.date - x0 ? d1 : d0; */
-                }
+                        function mousemove() {
+                            var x0 = xScale.invert(d3.mouse(this)[0]),
+                                  i = bisectDate(avgs, x0, 1),
+                                  d0 = avgs[i - 1],
+                                  d1 = avgs[i],
+                                  d = x0 - d0.key > d1.key - x0 ? d1 : d0;
 
-
-
+                            focus.attr("transform", "translate(" + xScale(d.key) + "," + yScale(d.values) + ")")
+                            focus.select("text").text(d3.round(d.values, 2));
+                        }
             });
 
         </script>
